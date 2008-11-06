@@ -74,7 +74,7 @@ class Ungadget {
                 $res = $res['data'];
                 if ($res) $style .= $res;
             }
-            if ($js) $content .= '<script>' . $js . '</script>';
+            if ($js) $content = '<script>' . $js . '</script>' . $content;
             if ($content) $content = '<style>' . $style . '</style>' . $content;
 
             if ($this->strip_newlines) $content = str_replace("\n", '', $content);
