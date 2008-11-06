@@ -35,13 +35,17 @@ class Ungadget {
                 throw new Exception('This gadget does not support OpenSocial ' . $version);
         }
 
-        $content = $xml->xpath('/Module/Content[@type="html"]');
+        $contents = $xml->xpath('/Module/Content[@type="html"]');
+        $content = '';
+        foreach ($contents as $block) {
+            $content .= $block;
+        }
 
         if ($content) {
             $ec = EpiCurl::getInstance();
+
             $hdls = array();
             foreach(array('js', 'css') as $type) $hdls[$type] = array();
-            $content = $content[0];
 
             /* scripts */
             preg_match_all("/<script[^<>]+src=['\"]([^<>'\"]+)['\"][^<>]*>(.*)<\/script>/i", $content, $scripts);
