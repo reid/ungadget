@@ -32,7 +32,10 @@ class Ungadget {
         $content = $xml->xpath('/Module/Content[@type="html"]');
         if ($content) {
             // TODO consolidate scripts, styles
-            return $content[0];
+            $content = $content[0];
+            $script_tags = preg_match("/<script[^<>]+src=['\"]([^<>'\"]+)['\"][^<>]*>(.*)<\/script>/i", $content, $script_matches);
+var_dump($script_matches);
+            return $content;
         } else {
             $inline = $xml->xpath('/Module/Content[@type="html-inline"]');
             if ($inline) {
