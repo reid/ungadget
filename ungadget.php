@@ -23,12 +23,13 @@ class Ungadget {
 
         if (!$xml) throw new Exception('Bad XML');
 
-        if ($xml->xpath('/Module/ModulePrefs/require[@feature="opensocial-' . self::$opensocial_version . '"]') === false) {
+        // For our case, we only support one version
+        $opensocial = $xml->xpath('/Module/ModulePrefs/Require[@feature="opensocial-' . self::$opensocial_version . '"]');
+        if (count($opensocial) == 0) {
             throw new Exception('Missing required version');
         }
 
         $content = $xml->xpath('/Module/Content[@type="html"]');
-
         if ($content) {
             // TODO consolidate scripts, styles
             return $content[0];
