@@ -4,32 +4,36 @@ require_once 'EpiCurl.php';
 
 class Ungadget {
 
-    static $opensocial_version = '0.8';
+    private $opensocial_version = '0.8';
+    private $strip_newlines = true;
 
-    static function fromUrl($url) {
-        $hdl = self::getCurlHandleForUrl($url);
+    public function transformFromUrl($url) {
+        $hdl = $this->getCurlHandleForUrl($url);
         $ec = EpiCurl::getInstance();
         $ec->addCurl($hdl);
         $gadget = $ec->getResult((string)$hdl);
-        return self::flatten($gadget['data']);
+        return $this->transformGadget($gadget['data']);
     }
 
-    static function getCurlHandleForUrl($url) {
-        $hdl = curl_init();
-        curl_setopt($hdl, CURLOPT_URL, $url);
-        curl_setopt($hdl, CURLOPT_RETURNTRANSFER, 1);
-        return $hdl;
+    public function setOpenSocialVersion($version) {
+        $this->opensocial_version = $version;
     }
 
-    static function flatten($gadget) {
+    public function setStripNewlines($bool) {
+        $this->strip_newlines = $bool;
+    }
+
+    public function transformGadget($gadget) {
         $xml = new SimpleXMLElement($gadget);
 
         if (!$xml) throw new Exception('Bad XML');
 
-        // For our case, we only support one version
-        $opensocial = $xml->xpath('/Module/ModulePrefs/Require[@feature="opensocial-' . self::$opensocial_version . '"]');
-        if (count($opensocial) == 0) {
-            throw new Exception('Missing required version');
+        $version = $this->opensocial_version;
+        if ($version) {
+            $opensocial = $xml->xpath('/Module/ModulePrefs/Require[@feature="opensocial-' . $version . '"]');
+            if (count($opensocial) == 0) {
+                throw new Exception('This gadget does not support OpenSocial ' . $version);
+            }
         }
 
         $content = $xml->xpath('/Module/Content[@type="html"]');
@@ -40,8 +44,8 @@ class Ungadget {
             $content = $content[0];
             $script_tags = preg_match_all("/<script[^<>]+src=['\"]([^<>'\"]+)['\"][^<>]*>(.*)<\/script>/i", $content, $script_matches);
             $script_keys = array();
-            foreach($script_matches[1] as $url) {
-                $hdl = self::getCurlHandleForUrl($url);
+            foreach ($script_matches[1] as $url) {
+                $hdl = $this->getCurlHandleForUrl($url);
                 $ec->addCurl($hdl);
                 $script_keys[] = (string) $hdl;
             }
@@ -50,8 +54,8 @@ class Ungadget {
             /* stylesheets */
             $link_tags = preg_match_all("/<link[^<>]+href=['\"]([^<>'\"]+.css)['\"][^<>]*[\/]*>((<\/link>)*)/i", $content, $link_matches); // This could do better by checking for the rel attribute...
             $stylesheet_keys = array();
-            foreach($link_matches[1] as $url) {
-                $hdl = self::getCurlHandleForUrl($url);
+            foreach ($link_matches[1] as $url) {
+                $hdl = $this->getCurlHandleForUrl($url);
                 $ec->addCurl($hdl);
                 $stylesheet_keys[] = (string) $hdl;
             }
@@ -73,7 +77,9 @@ class Ungadget {
             if ($js) $content .= '<script>' . $js . '</script>';
             if ($content) $content = '<style>' . $style . '</style>' . $content;
 
-            return str_replace("\n", '', $content);
+            if ($this->strip_newlines) $content = str_replace("\n", '', $content);
+
+            return $content;
         } else {
             $inline = $xml->xpath('/Module/Content[@type="html-inline"]');
             if ($inline) {
@@ -82,6 +88,13 @@ class Ungadget {
                 throw new Exception('Content not found');
             }
         }
+    }
+
+    private function getCurlHandleForUrl($url) {
+        $hdl = curl_init();
+        curl_setopt($hdl, CURLOPT_URL, $url);
+        curl_setopt($hdl, CURLOPT_RETURNTRANSFER, 1);
+        return $hdl;
     }
 
 }

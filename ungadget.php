@@ -2,4 +2,9 @@
 
 require_once 'includes/Ungadget.php';
 
-echo Ungadget::fromUrl($_GET['url']);
+$o = new Ungadget();
+
+if ($_GET['ver']) $o->setOpenSocialVersion($_GET['ver']);
+if ($_GET['newlines']) $o->setStripNewlines(!(bool) $_GET['newlines']);
+
+echo $o->transformFromUrl($_GET['url']);
