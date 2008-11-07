@@ -5,7 +5,7 @@ require_once 'EpiCurl.php';
 class Ungadget {
 
     private $opensocial_version = '0.8';
-    private $strip_newlines = true;
+    private $strip_newlines = false;
 
     public function transformFromUrl($url) {
         $hdl = $this->getCurlHandleForUrl($url);
