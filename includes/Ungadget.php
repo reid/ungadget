@@ -44,7 +44,9 @@ class Ungadget {
             $views = explode(',', $attribs['view']);
             if ($views[0] != '') {
                 foreach (array('default', 'canvas') as $target) {
-                    if (!in_array($target, $views)) {
+                    if (in_array($target, $views)) {
+                        continue;
+                    } else {
                         continue 2;
                     }
                 }
