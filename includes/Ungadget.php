@@ -37,7 +37,18 @@ class Ungadget {
 
         $contents = $xml->xpath('/Module/Content[@type="html"]');
         $content = '';
+
+        // here's wishing xpath predicates worked correctly:
         foreach ($contents as $block) {
+            $attribs = $block->attributes();
+            $views = explode(',', $attribs['view']);
+            if ($views[0] != '') {
+                foreach (array('default', 'canvas') as $target) {
+                    if (!in_array($target, $views)) {
+                        continue 2;
+                    }
+                }
+            }
             $content .= $block;
         }
 
