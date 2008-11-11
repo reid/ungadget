@@ -1,6 +1,6 @@
 <?php
 
-require_once 'EpiCurl.php';
+require_once 'MultiCurl.php';
 
 class Ungadget {
 
@@ -12,16 +12,15 @@ class Ungadget {
         }
 
         $hdl = $this->getCurlHandleForUrl($url);
-        $ec = EpiCurl::getInstance();
-        $ec->addCurl($hdl);
-        $res = $ec->getResult((string) $hdl);
-        $gadget = $res['data'];
+        $multi = MultiCurl::getInstance();
+        $multi->add($hdl);
+        $gadget = $multi->get((string) $hdl);
 
         if (!$gadget) {
             throw new Exception('Request for that URL failed');
         }
 
-        return $this->transformGadget($res['data']);
+        return $this->transformGadget($gadget);
     }
 
     public function setOpenSocialVersion($version) {
@@ -73,7 +72,7 @@ class Ungadget {
     }
 
     private function flatten($html) {
-        $ec = EpiCurl::getInstance();
+        $multi = MultiCurl::getInstance();
 
         $hdls = array();
         foreach(array('js', 'css') as $type) {
@@ -86,7 +85,7 @@ class Ungadget {
         $html = str_replace($scripts[0], '', $html);
         foreach ($scripts[1] as $url) {
             $hdl = $this->getCurlHandleForUrl($url);
-            $ec->addCurl($hdl);
+            $multi->add($hdl);
             $hdls['js'][] = (string) $hdl;
         }
 
@@ -95,15 +94,14 @@ class Ungadget {
         $html = str_replace($links[0], '', $html);
         foreach ($links[1] as $url) {
             $hdl = $this->getCurlHandleForUrl($url);
-            $ec->addCurl($hdl);
+            $multi->add($hdl);
             $hdls['css'][] = (string) $hdl;
         }
 
         /* append results */
         foreach ($hdls as $key => $ids) {
             foreach ($ids as $id) {
-                $res = $ec->getResult($id);
-                $res = $res['data'];
+                $res = $multi->get($id);
                 if ($res) $$key .= $res;
             }
         }
